@@ -68,6 +68,8 @@ def predict_(x, theta):
     """
     try:
         x_1 = np.c_[np.ones(x.shape[0]), x]
+        if x.shape[1] == theta.shape[0]: # (_,n) (n, _)
+            return x.dot(theta)
         return x_1.dot(theta)
     except Exception:
         return None
@@ -98,10 +100,11 @@ def gradient_(x, y, theta):
         x_1 = np.c_[np.ones(x.shape[0]), x]
         x_t = x_1.T
         # print(f"x_t.shape = {x_t.shape}")
-        if x.shape[1] == theta.shape[0]:
-            h =  x.dot(theta)
-        else:
-            h = x_1.dot(theta)
+        h = predict_(x, theta)
+        # if x.shape[1] == theta.shape[0]:
+        #     h =  x.dot(theta)
+        # else:
+        #     h = x_1.dot(theta)
         diff = h - y
         return x_t.dot(diff) / m
     except Exception:

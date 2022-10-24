@@ -16,6 +16,8 @@ def predict_(x, theta):
     """
     try:
         x_1 = np.c_[np.ones(x.shape[0]), x]
+        if x.shape[1] == theta.shape[0]: # (_,n) (n, _)
+            return x.dot(theta)
         return x_1.dot(theta)
     except Exception:
         return None
