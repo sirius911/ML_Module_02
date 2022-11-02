@@ -16,6 +16,28 @@ data = pd.read_csv("../spacecraft_data.csv")
 # print(MyLR.mse_(y_pred,Y))
 
 
+def plot(X,Y,Y_hat, Xlabel, title):
+    """ plot the real values and predicted value
+    args:
+        X: X values
+        Y: Real Y values
+        Y_hat: Y predicted values
+        Xlabel: label X axe
+        title: title of graph    
+    """
+
+    # draw real values
+    plt.scatter(X, Y, c='blue', label="Sell price")
+    # draw predicted values
+    plt.scatter(X, Y_hat, c='c', s=8, label='Predicted sell price')
+
+    plt.xlabel(Xlabel)
+    plt.ylabel("y: sell price (in keuros)")
+    plt.legend(frameon=True)
+    plt.title(title)
+    plt.grid(True)
+    plt.show()
+
 # print("****** First Part ******")
 print(" with age")
 Xage = np.array(data['Age']).reshape(-1,1)
@@ -30,17 +52,8 @@ print(f"Thetas = {myLR_age.thetas}")
 y_hat_age = myLR_age.predict_(Xage)
 mse = MyLR.mse_(Ysell, y_hat_age)
 print(f"MSE = {mse}")
-# draw real values
-plt.scatter(Xage, Ysell, c='blue', label="Sell price")
-# draw predicted values
-plt.scatter(Xage, y_hat_age, c='c', s=8, label='Predicted sell price')
-plt.xlabel("$x_1: Age~(in~years)$")
-plt.ylabel("y: sell price (in keuros)")
-plt.legend(frameon=True)
 title = "MSE = " + str(round(mse,2))
-plt.title(title)
-plt.grid(True)
-plt.show()
+plot(Xage, Ysell, y_hat_age, "$x_1: Age~(in~years)$",title)
 
 print(" With Thrust")
 Xthrust = np.array(data['Thrust_power']).reshape(-1,1)
@@ -53,17 +66,8 @@ print(f"Thetas = {myLR_thrust.thetas}")
 y_hat_thrust = myLR_thrust.predict_(Xthrust)
 mse = MyLR.mse_(Ysell, y_hat_thrust)
 print(f"MSE = {mse}")
-# draw real values
-plt.scatter(Xthrust, Ysell, c='green', label="Sell price")
-# draw predicted values
-plt.scatter(Xthrust, y_hat_thrust, s=4, c="olive", label='Predicted sell price')
-plt.xlabel("$x_2: thrust~(in~10km/s)$")
-plt.ylabel("y: sell price (in keuros)")
-plt.legend(frameon=True)
 title = "MSE = " + str(round(mse,2))
-plt.title(title)
-plt.grid(True)
-plt.show()
+plot(Xthrust, Ysell, y_hat_thrust, "$x_2: thrust~(in~10km/s)$",title)
 
 print(" With Distance")
 Xdistance = np.array(data['Terameters']).reshape(-1,1)
@@ -76,17 +80,9 @@ print(f"Thetas = {myLR_distance.thetas}")
 y_hat_distance = myLR_distance.predict_(Xdistance)
 mse = MyLR.mse_(Ysell, y_hat_distance)
 print(f"MSE = {mse}")
-# draw real values
-plt.scatter(Xdistance, Ysell, c='b', label="Sell price")
-# draw predicted values
-plt.scatter(Xdistance, y_hat_distance, s=4, c="cyan", label='Predicted sell price')
-plt.xlabel("$x_3: distance~totalizer~value~of~spacescraft~(in~Tmeters)$")
-plt.ylabel("y: sell price (in keuros)")
-plt.legend(frameon=True)
 title = "MSE = " + str(round(mse,2))
-plt.title(title)
-plt.grid(True)
-plt.show()
+plot(Xdistance, Ysell, y_hat_distance, "$x_3: distance~totalizer~value~of~spacescraft~(in~Tmeters)$",title)
+
 print("second part")
 X = np.array(data[['Age','Thrust_power','Terameters']])
 Y = np.array(data[['Sell_price']])
@@ -102,45 +98,12 @@ print(MyLR.gradien_(X,Y,theta))
 #after 30mn
 my_lreg.thetas = np.array([[359.89514161],[-23.43288337],[5.76394932],[-2.62662224]])
 print(my_lreg.thetas)
-# Output:
-# array([[334.994...],[-22.535...],[5.857...],[-2.586...]])
-# Example 2:
+
 y_hat = my_lreg.predict_(X)
 mse = MyLR.mse_(Y,y_hat)
 print(MyLR.mse_(Y,y_hat))
-
-# # draw real values
-plt.scatter(Xage, Y, c='m', label="Sell price")
-# draw predicted values
-plt.scatter(Xage, y_hat, c='b', s=6,label="Prédicted Sell price")
-plt.xlabel("$x_1: Age~(in~years)$")
-plt.ylabel("y: sell price (in keuros)")
-plt.legend(frameon=True)
 title = "MSE = " + str(round(mse,2))
-plt.title(title)
-plt.grid(True)
-plt.show()
+plot(Xage, Ysell, y_hat, "$x_1: Age~(in~years)$",title)
+plot(Xthrust, Ysell, y_hat, "$x_2: thrust~(in~10km/s)$",title)
+plot(Xdistance, Ysell, y_hat, "$x_3: distance~totalizer~value~of~spacescraft~(in~Tmeters)$",title)
 
-# # draw real values
-plt.scatter(Xthrust, Y, c='m', label="Sell price")
-# draw predicted values
-plt.scatter(Xthrust, y_hat, c='b', s=6,label="Predicted Sell price")
-plt.xlabel("$x_2: thrust~(in~10km/s)$")
-plt.ylabel("y: sell price (in keuros)")
-plt.legend(frameon=True)
-title = "MSE = " + str(round(mse,2))
-plt.title(title)
-plt.grid(True)
-plt.show()
-
-# # draw real values
-plt.scatter(Xdistance, Y, c='m', label="Sell price")
-# draw predicted values
-plt.scatter(Xdistance, y_hat, c='b', s=6,label="Prédicted Sell price")
-plt.xlabel("$x_3: distance~totalizer~value~of~spacescraft~(in~Tmeters)$")
-plt.ylabel("y: sell price (in keuros)")
-plt.legend(frameon=True)
-title = "MSE = " + str(round(mse,2))
-plt.title(title)
-plt.grid(True)
-plt.show()
