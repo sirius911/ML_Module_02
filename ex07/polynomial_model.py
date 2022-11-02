@@ -24,7 +24,6 @@ def add_polynomial_features(x, power):
         ret = np.zeros((len(x), power), int)
 
         for j, n in enumerate(x):
-            # n + n^i
             for i in range(power):
                 ret[j][i] = n[0] ** (i + 1)
         return ret
