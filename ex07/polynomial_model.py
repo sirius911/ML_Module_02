@@ -14,19 +14,20 @@ def add_polynomial_features(x, power):
     Raises:
         This function should not raise any Exception.
     """
-    if not isinstance(x, np.ndarray) or not isinstance(power, int):
-        return None
-    if len(x) == 0 or power <=0:
-        return None
     try:
-        if len(x.shape) > 1 and x.shape[1] != 1:
+        if not isinstance(x, np.ndarray) or not isinstance(power, int):
             return None
-        ret = np.zeros((len(x), power), int)
-
-        for j, n in enumerate(x):
-            for i in range(power):
-                ret[j][i] = n[0] ** (i + 1)
-        return ret
+        if not x.ndim in [1, 2]:
+            return None
+        if power <0:
+            return None
+        if x.ndim == 2 and x.shape[1] != 1:
+            return None
+        if power == 0:
+            return np.ones((x.shape[0], 1))
+        if power == 1:
+            return np.array(x, copy=True).reshape(-1,1)
+        return np.vander(x.reshape(-1,), N=power + 1, increasing=True)[:,1:]
     except Exception:
         return None
 

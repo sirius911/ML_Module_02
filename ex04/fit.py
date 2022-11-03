@@ -66,11 +66,20 @@ def predict_(x, theta):
     Raises:
         This function should not raise any Exceptions.
     """
+    if not isinstance(x, np.ndarray) or not isinstance(theta, np.ndarray):
+        return None
     try:
-        x_1 = np.c_[np.ones(x.shape[0]), x]
-        if x.shape[1] == theta.shape[0]: # (_,n) (n, _)
-            return x.dot(theta)
-        return x_1.dot(theta)
+        m = x.shape[0]
+        if x.ndim == 1:
+            x = x.reshape(-1,1)
+        if m == 0:
+            return None
+        if theta.ndim != 2 and theta.shape[1] != 1:
+            #expected (m , 1)
+            return None
+        x_ = np.hstack((np.ones((m, 1)), x))
+        y = x_ @ theta
+        return y
     except Exception:
         return None
 
@@ -90,24 +99,25 @@ def gradient_(x, y, theta):
     Raises:
         This function should not raise any Exception.
     """
-    if not isinstance(x,np.ndarray) or not isinstance(y, np.ndarray) or not isinstance(theta, np.ndarray):
-        return None
-    if len(x) == 0 or len(y) == 0 or len(theta) == 0:
-        return None
-    # print(f"x.shape={x.shape}\ty.shape={y.shape}\ttheta.shape={theta.shape}")
     try:
-        m = len(x)
-        x_1 = np.c_[np.ones(x.shape[0]), x]
-        x_t = x_1.T
-        # print(f"x_t.shape = {x_t.shape}")
-        h = predict_(x, theta)
-        # if x.shape[1] == theta.shape[0]:
-        #     h =  x.dot(theta)
-        # else:
-        #     h = x_1.dot(theta)
-        diff = h - y
-        return x_t.dot(diff) / m
-    except Exception:
+        # Testing the type of the parameters, numpy array expected.
+        if (not isinstance(x, np.ndarray)) \
+            or (not isinstance(y, np.ndarray)) \
+                or (not isinstance(theta, np.ndarray)):
+            return None
+
+        # Testing the shape of the paramters.
+        if (y.shape[1] != 1) \
+            or (theta.shape[1] != 1) \
+                or (x.shape[0] != y.shape[0]) \
+                or ((x.shape[1] + 1) != theta.shape[0]):
+            return None
+
+        m = x.shape[0]
+        x_ = np.hstack((np.ones((m, 1)), x))
+        grad = x_.T @ (x_ @ theta - y)
+        return grad / m
+    except:
         return None
 
 def fit_(x, y, theta, alpha, max_iter):
@@ -130,13 +140,12 @@ def fit_(x, y, theta, alpha, max_iter):
         return None
     if len(x) == 0 or len(y) == 0 or len(theta) == 0:
         return None
-    
-    new_theta = theta.copy()
-    for i in ft_progress(range(max_iter)):
-        gradien = gradient_(x,y,new_theta)
-        # print(gradien)
-        for n, g_n in enumerate(gradien):
-            tn = new_theta[n][0]            
-            tn -= (alpha * gradien[n][0])
-            new_theta[n][0] = tn
-    return(new_theta)
+    try:
+        new_theta = np.copy(theta.astype('float64'))
+        for i in ft_progress(range(max_iter)):
+            gradien = gradient_(x,y,new_theta)
+            # print(gradien)
+            new_theta = new_theta - (alpha * gradien)
+        return(new_theta)
+    except Exception:
+        return None

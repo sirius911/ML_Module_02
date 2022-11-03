@@ -14,10 +14,19 @@ def predict_(x, theta):
     Raises:
         This function should not raise any Exception.
     """
+    if not isinstance(x, np.ndarray) or not isinstance(theta, np.ndarray):
+        return None
     try:
-        x_1 = np.c_[np.ones(x.shape[0]), x]
-        if x.shape[1] == theta.shape[0]: # (_,n) (n, _)
-            return x.dot(theta)
-        return x_1.dot(theta)
+        m = x.shape[0]
+        if x.ndim == 1:
+            x = x.reshape(-1,1)
+        if m == 0:
+            return None
+        if theta.ndim != 2 and theta.shape[1] != 1:
+            #expected (m , 1)
+            return None
+        x_ = np.hstack((np.ones((m, 1)), x))
+        y = x_ @ theta
+        return y
     except Exception:
         return None

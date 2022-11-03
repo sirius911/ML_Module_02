@@ -1,6 +1,8 @@
 import numpy as np
 
 
+
+
 def gradient(x, y, theta):
     """Computes a gradient vector from three non-empty numpy.array, without any for-loop.
         The three arrays must have the compatible dimensions.
@@ -17,21 +19,21 @@ def gradient(x, y, theta):
     Raises:
         This function should not raise any Exception.
     """
+
     if not isinstance(x,np.ndarray) or not isinstance(y, np.ndarray) or not isinstance(theta, np.ndarray):
         return None
-    if len(x) == 0 or len(y) == 0 or len(theta) == 0:
-        return None
-    # print(f"x.shape={x.shape}\ty.shape={y.shape}\ttheta.shape={theta.shape}")
     try:
-        m = len(x)
-        x_1 = np.c_[np.ones(x.shape[0]), x]
+        m = x.shape[0]
+        n = x.shape[1]
+
+        if (y.shape[1] != 1) or (theta.shape[1] != 1) \
+        or (m != y.shape[0]):
+            return None
+        x_1 = np.hstack((np.ones((m, 1)), x))
         x_t = x_1.T
-        # print(f"x_t.shape = {x_t.shape}")
-        if x.shape[1] == theta.shape[0]:
-            h =  x.dot(theta)
-        else:
-            h = x_1.dot(theta)
+        h = x @ theta
         diff = h - y
-        return x_t.dot(diff) / m
+        grad = x_t @ diff
+        return grad / m
     except Exception:
         return None

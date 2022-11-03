@@ -1,44 +1,103 @@
+import os
+import sys
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
+
+path = os.path.join(os.path.dirname(__file__), '..', 'ex07')
+sys.path.insert(1, path)
+
 from polynomial_model import add_polynomial_features
+
+path = os.path.join(os.path.dirname(__file__), '..', 'ex05')
+sys.path.insert(1, path)
 from mylinearregression import MyLinearRegression as MyLR
 
+if __name__ == "__main__":
+    # Retrieving and checking the data:
+    try:
+        data = pd.read_csv('../are_blue_pills_magics.csv')
 
-x = np.arange(1,11).reshape(-1,1)
-y = np.array([[ 1.39270298],
-[ 3.88237651],
-[ 4.37726357],
-[ 4.63389049],
-[ 7.79814439],
-[ 6.41717461],
-[ 8.63429886],
-[ 8.19939795],
-[10.37567392],
-[10.68238222]])
+        # Checking column names
+        expected_cols = ['Patient', 'Micrograms', 'Score']
+        if not all([c in expected_cols for c in data.columns]):
+            print("Missing or unexpected columns.", file=sys.stderr)
+            sys.exit()
+        # Checking of the dtype, strict test but it may helps to avoid
+        # traps of twisted evaluators
+        if not all([dt.kind in ['i', 'f'] for dt in data.dtypes]):
+            s = "Incorrect datatype for one or more columns."
+            print(s, file=sys.stderr)
+            sys.exit()
+    except:
+        sys.exit()
 
-# Build the model:
-print(x.shape)
-x_ = add_polynomial_features(x, 3)
-print(x_)
-print(x_.shape)
-thetas = np.ones(4).reshape(-1,1)
-print(thetas)
-print(thetas.shape)
-gradien = MyLR.gradien_(x_, y, thetas)
-print(gradien)
-my_lr = MyLR(thetas=thetas, alpha=0.00001, progress_bar=True).fit_(x_,y)
-# my_lr.fit_(x_,y)
-print(my_lr.thetas)
-# Plot:
-## To get a smooth curve, we need a lot of data points
-continuous_x = np.arange(1,10.01, 0.01).reshape(-1,1)
-x_ = add_polynomial_features(continuous_x, 3)
-print(continuous_x.shape)
-print(my_lr.thetas.shape)
-y_hat = my_lr.predict_(x_)
-print(y_hat)
+    target = data.Score.values.reshape(-1, 1)
+    x = data.Micrograms.values
 
-plt.scatter(x,y)
-plt.plot(continuous_x, y_hat, color='orange')
+    x1 = add_polynomial_features(x, 1)
+    x2 = add_polynomial_features(x, 2)
+    x3 = add_polynomial_features(x, 3)
+    x4 = add_polynomial_features(x, 4)
+    x5 = add_polynomial_features(x, 5)
+    x6 = add_polynomial_features(x, 6)
 
-plt.show()
+    theta4 = np.array([-20., 160., -80., 10., -1.]).reshape(-1, 1)
+    theta5 = np.array([1140., -1850., 1110., -305., 40., -2.]).reshape(-1, 1)
+    theta6 = np.array([9110., -18015., 13400., -4935., 966., -96.4, 3.86])
+    theta6 = theta6.reshape(-1, 1)
+
+    np.random.seed = 42
+    mylr1 = MyLR(np.random.rand(2, 1), alpha=1e-3, max_iter=1000000, progress_bar=True)
+    mylr2 = MyLR(np.random.rand(3, 1), alpha=1e-3, max_iter=1000000, progress_bar=True)
+    mylr3 = MyLR(np.random.rand(4, 1), alpha=6e-5, max_iter=5000000, progress_bar=True)
+    mylr4 = MyLR(theta4, alpha=1e-6, max_iter=1000000, progress_bar=True)
+    mylr5 = MyLR(theta5, alpha=4e-8, max_iter=1000000, progress_bar=True)
+    mylr6 = MyLR(theta6, alpha=1e-9, max_iter=5000000, progress_bar=True)
+
+    print("starting training model #1")
+    mylr1.fit_(x1, target)
+    print("starting training model #2")
+    mylr2.fit_(x2, target)
+    print("starting training model #3")
+    mylr3.fit_(x3, target)
+    print("starting training model #4")
+    mylr4.fit_(x4, target)
+    print("starting training model #5")
+    mylr5.fit_(x5, target)
+    print("starting training model #6")
+    mylr6.fit_(x6, target)
+
+    _, axe = plt.subplots(1, 1, figsize=(15, 8))
+
+    x_sampling = np.linspace(1, 7, 100)
+    axe.scatter(x, target, label='raw', c='black')
+    axe.plot(x_sampling,
+             mylr1.predict_(add_polynomial_features(x_sampling, 1)),
+             label='pred mylr1')
+    axe.plot(x_sampling,
+             mylr2.predict_(add_polynomial_features(x_sampling, 2)),
+             label='pred mylr2')
+    axe.plot(x_sampling,
+             mylr3.predict_(add_polynomial_features(x_sampling, 3)),
+             label='pred mylr3')
+    axe.plot(x_sampling,
+             mylr4.predict_(add_polynomial_features(x_sampling, 4)),
+             label='pred mylr4')
+    axe.plot(x_sampling,
+             mylr5.predict_(add_polynomial_features(x_sampling, 5)),
+             label='pred mylr5')
+    axe.plot(x_sampling,
+             mylr6.predict_(add_polynomial_features(x_sampling, 6)),
+             label='pred mylr6')
+    plt.grid()
+    plt.legend()
+    plt.show()
+
+    # MSE repport:
+    print("#" * 50, "\nLoss report:")
+    lst_x = [x1, x2, x3, x4, x5, x6]
+    lst_models = [mylr1, mylr2, mylr3, mylr4, mylr5, mylr6]
+    for idx, xx, model in zip(range(1, 7), lst_x, lst_models):
+        print(f"mylr{idx}: MSE = {model.loss_(xx, target):.5f}")
+    print("#" * 50)

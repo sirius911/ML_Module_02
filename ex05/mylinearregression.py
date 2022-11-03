@@ -15,7 +15,7 @@ class MyLinearRegression():
     def __init__(self, thetas, alpha=0.001, max_iter=1000, progress_bar=False):
         if (not isinstance(alpha, float) and not isinstance(alpha, int)) or alpha <= 0:
             raise MyLinearRegressionException("MyLinearRegressionException: Alpha must be a float > 0")
-        self.alpha = alpha
+        self.alpha = float(alpha)
         if not isinstance(max_iter, int) or max_iter <= 0:
             raise MyLinearRegressionException("MyLinearRegressionException: max_iter must be an int > 0")
         self.max_iter = max_iter
@@ -25,15 +25,10 @@ class MyLinearRegression():
             self.progress_bar = False
         if len(thetas) == 0:
             raise MyLinearRegressionException("MyLinearRegressionException: Bad thetas")
-        if isinstance(thetas, list):
-            self.thetas = np.array(thetas)
+        if isinstance(thetas, np.ndarray):
+            self.thetas = thetas.astype('float64')
         else:
-            self.thetas = thetas
-        # if not isinstance(thetas, np.ndarray):
-        #     raise MyLinearRegressionException("MyLinearRegressionException: Bad thetas")
-        # if thetas.shape != (2, 1):
-        #     raise MyLinearRegressionException("MyLinearRegressionException: Bad thetas")
-        
+            self.thetas = np.array(thetas,dtype='float64').reshape(-1,1)
 
     def predict_(self, x):
         """Computes the vector of prediction y_hat from two non-empty numpy.array.
@@ -148,23 +143,24 @@ class MyLinearRegression():
         Raises:
             This function should not raise any Exception.
         """
-        if not isinstance(x,np.ndarray) or not isinstance(y, np.ndarray) or not isinstance(thetas, np.ndarray):
-                return None
-        if len(x) == 0 or len(y) == 0 or len(thetas) == 0:
-            return None
-            # print(f"x.shape={x.shape}\ty.shape={y.shape}\ttheta.shape={theta.shape}")
         try:
-            m = len(x)
-            x_1 = np.c_[np.ones(x.shape[0]), x]
-            x_t = x_1.T
-            # print(f"x_t.shape = {x_t.shape}")
-            if x.shape[1] == thetas.shape[0]:
-                h =  x.dot(thetas)
-            else:
-                h = x_1.dot(thetas)
-            diff = h - y
-            return x_t.dot(diff) / m
-        except Exception:
+            # Testing the type of the parameters, numpy array expected.
+            if (not isinstance(x, np.ndarray)) or (not isinstance(y, np.ndarray)) \
+                or (not isinstance(thetas, np.ndarray)):
+                return None
+
+            # Testing the shape of the paramters.
+            if (y.shape[1] != 1) \
+                or (thetas.shape[1] != 1) \
+                    or (x.shape[0] != y.shape[0]) \
+                    or ((x.shape[1] + 1) != thetas.shape[0]):
+                return None
+
+            m = x.shape[0]
+            x_ = np.hstack((np.ones((m, 1)), x))
+            grad = x_.T @ (x_ @ thetas - y)
+            return grad / m
+        except:
             return None
 
     def mse_(y, y_hat):
