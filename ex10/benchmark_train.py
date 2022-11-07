@@ -3,6 +3,7 @@ import sys
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import pickle
 
 def zscore(x):
     """Computes the normalized version of a non-empty numpy.ndarray using the z-score standardization.
@@ -51,41 +52,104 @@ if __name__ == "__main__":
     prod_distance = data.prod_distance.values.reshape(-1, 1)
     time_delivery = data.time_delivery.values.reshape(-1, 1)
    
-    # figure, axis = plt.subplots(3, figsize=(20, 10))
+    figure, axis = plt.subplots(3, figsize=(20, 10))
     
 
-    # axis[0].scatter(weight, target, c='blue')
-    # axis[0].set_xlabel("weight in ton")
-    # axis[1].scatter(prod_distance, target, c='red')
-    # axis[1].set_xlabel("dist in Mkm")
-    # axis[2].scatter(time_delivery, target, c='orange')
-    # axis[2].set_xlabel("time in days")
-    # plt.show()
+    axis[0].scatter(weight, target, c='blue')
+    axis[0].set_xlabel("weight in ton")
+    axis[1].scatter(prod_distance, target, c='red')
+    axis[1].set_xlabel("dist in Mkm")
+    axis[2].scatter(time_delivery, target, c='orange')
+    axis[2].set_xlabel("time in days")
+    plt.show()
 
     # split dataset
     x_train, x_test, y_train, y_test = data_spliter(Xs, target.reshape(-1,1), 0.8)
+    
+    # weight
     weight_train = x_train.T[0]
+    weight_test = x_test.T[0]
+    
     # normalisation
-    weight_train = zscore(weight_train)
     y_train = zscore(y_train)
     y_test = zscore(y_test)
-    # x_train.T[0] == weight
-    # x_train.T[1] == distance
-    # x_train.T[2] == time
+    weight_train_norm = zscore(weight_train)
+    weight_test_norm = zscore(weight_test)
    
-    feature = add_polynomial_features(weight,4)
-    # print(feature.shape)
-    feature_weight = add_polynomial_features(weight_train, 4)
-    # print(feature_weight.shape)
-    # print(target.shape)
-    # print(y_train.shape)
-    theta = np.random.rand(5, 1)
-    mylr = MyLR(thetas=theta, alpha=1e-2, max_iter=1000000, progress_bar=True)
-    # print(MyLR.gradien_(feature_weight, y_train, theta))
-    mylr.fit_(feature_weight, y_train)
-    prediction = mylr.predict_(feature_weight)
+    try:
+        mylr = pickle.load( open( "weight.pickle", "rb" ) )
+        
+    except FileNotFoundError:
+
+        theta = np.random.rand(4, 1)
+        mylr = MyLR(thetas=theta, alpha=1e-2, max_iter=1000000, progress_bar=True)
+        mylr.fit_(add_polynomial_features(weight_train_norm, 3), y_train)
+        # mylr.thetas = np.array([[ 1.20893361e-01], [ 9.47634630e-01], [-1.18295546e-01], [-6.23921560e-04], [-1.46523240e-03]])
+        print(mylr.thetas)
+        print("save mylr ...", end='')
+        pickle.dump( mylr, open( "weight.pickle", "wb" ) )
+        print(" ok")
+        
+    prediction = mylr.predict_(add_polynomial_features(weight_test_norm, 3))
     # print(prediction)
     mse = MyLR.mse_(y_test.T,prediction)
     print(f"MSE = {mse}")
     plt.scatter(weight_train, y_train)
+    plt.scatter(weight_test, prediction)
+    # plt.plot(weight_test, prediction)
+    plt.show()
+
+    #distance
+    distance_train = x_train.T[1]
+    distance_test = x_test.T[1]
+    #normalisation
+    distance_train_norm = zscore(distance_train)
+    distance_test_norm = zscore(distance_test)
+
+    try:
+        mylr = pickle.load( open( "distance.pickle", "rb" ) )
+    except FileNotFoundError:
+        theta = np.random.rand(5, 1)
+        mylr = MyLR(thetas=theta, alpha=1e-2, max_iter=1000000, progress_bar=True)
+        # mylr.fit_(add_polynomial_features(distance_train_norm, 4), y_train)
+        mylr.thetas = np.array([[-0.28295574], [-0.36618452], [ 0.32636224], [ 0.15421623], [-0.02273116]])
+        print(mylr.thetas)
+        print("save mylr ...", end='')
+        pickle.dump( mylr, open( "distance.pickle", "wb" ) )
+        print(" ok")
+        
+    prediction = mylr.predict_(add_polynomial_features(distance_test_norm,4))
+    # print(prediction)
+    mse = MyLR.mse_(y_test.T,prediction)
+    print(f"MSE = {mse}")
+    plt.scatter(distance_train, y_train)
+    plt.scatter(distance_test, prediction)
+    # x_sampling = np.linspace(1000, 3000, 4000)
+    # plt.plot(x_sampling, mylr.predict_(add_polynomial_features(x_sampling,4)), c='r')
+    plt.show()
+    print(f"pour x=1500, prix = {mylr.predict_(add_polynomial_features(np.array([[1500]]), 4))}")
+
+    #time
+    time_train = x_train.T[2]
+    time_test = x_test.T[2]
+    #normalisation
+    time_train_norm = zscore(time_train)
+    time_test_norm = zscore(time_test)
+    try:
+        mylr = pickle.load( open( "time.pickle", "rb" ) )
+    except FileNotFoundError:
+        theta = np.random.rand(5, 1)
+        mylr = MyLR(thetas=theta, alpha=1e-2, max_iter=1000000, progress_bar=True)
+        mylr.fit_(add_polynomial_features(time_train_norm, 4), y_train)
+        # mylr.thetas = np.array([[ 0.00348599], [ 0.02234647], [ 0.00741201], [-0.01350792], [-0.00617828]])
+        print(mylr.thetas)
+        print("save mylr ...", end='')
+        pickle.dump( mylr, open( "time.pickle", "wb" ) )
+        print(" ok")
+    prediction = mylr.predict_(add_polynomial_features(time_test_norm,4))
+    # print(prediction)
+    mse = MyLR.mse_(y_test.T,prediction)
+    print(f"MSE = {mse}")
+    plt.scatter(time_train, y_train)
+    plt.scatter(time_test, prediction)
     plt.show()
