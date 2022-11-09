@@ -127,18 +127,11 @@ class MyLinearRegression():
                 if self.progress_bar:
                     list = ft_progress(list)
                 list_mse = []
-                for i in list:
-                    # m = len(x)
-                    # h = self.predict_(x)
-                    # diff = h - y
+                for _ in list:
                     gradien = self.gradien_(x, y)
                     self.thetas = self.thetas - (self.alpha * gradien)
-                    mse = int(MyLinearRegression.mse_(y, self.predict_(x)))
+                    mse = MyLinearRegression.mse_(y, self.predict_(x))
                     list_mse.append(mse)
-                    # for n, g_n in enumerate(gradien):
-                    #     tn = self.thetas[n][0]
-                    #     tn -= (self.alpha * gradien[n][0])
-                    #     self.thetas[n][0]= tn
                 return list_mse
         except Exception as e:
             raise MyLinearRegressionException(e)
@@ -172,25 +165,7 @@ class MyLinearRegression():
         except Exception as e:
             print(e)
             return None
-        # if not isinstance(x,np.ndarray) or not isinstance(y, np.ndarray) or not isinstance(thetas, np.ndarray):
-        #     print("Error in gradien_(): not numpy.array")
-        #     return None
-        # try:
-        #     m = x.shape[0]
-        #     n = x.shape[1]
-            
-        #     # if (y.shape[1] != 1) or (thetas.shape[1] != 1) \
-        #     # or (m != y.shape[0]):
-        #     #     return None
-        #     x_1 = np.hstack((np.ones((m, 1)), x))
-        #     x_t = x_1.T
-        #     h = x @ thetas
-        #     diff = h - y
-        #     grad = x_t @ diff
-        #     return grad / m
-        # except Exception as e:
-        #     print(e)
-        #     return None
+
 
     #****************************************************************
     # Class' Methods
