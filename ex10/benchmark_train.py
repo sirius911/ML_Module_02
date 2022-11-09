@@ -5,6 +5,16 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import pickle
 
+path = os.path.join(os.path.dirname(__file__), '..', 'ex09')
+sys.path.insert(1, path)
+from data_spliter import data_spliter
+
+from polynomial_model import add_polynomial_features
+
+path = os.path.join(os.path.dirname(__file__), '..', 'ex05')
+sys.path.insert(1, path)
+from mylinearregression import MyLinearRegression as MyLR
+
 def minmax(x):
     """Computes the normalized version of a non-empty numpy.ndarray using the min-max standardization.
     Args:
@@ -15,17 +25,21 @@ def minmax(x):
     Raises:
         This function shouldn’t raise any Exception.
     """
-    if not isinstance(x, np.ndarray):
-        print("Error in minmax: not numpy.array")
+    # if not isinstance(x, np.ndarray):
+    #     print("Error in minmax: not numpy.array")
+    #     return None
+    # if len(x.shape) == 0 or len(x.shape) > 2:
+    #     print("Error in minmax: bad shape")
+    #     return None
+    # if len(x.shape) == 2 and x.shape[1] != 1:
+    #     print("Error in minmax: bad shape")
+    #     return None
+    try:
+        ret = np.array(x - np.min(x)) / (np.max(x) - np.min(x))
+        return (ret)
+    except Exception as e:
+        print(e)
         return None
-    if len(x.shape) == 0 or len(x.shape) > 2:
-        print("Error in minmax: bad shape")
-        return None
-    if len(x.shape) == 2 and x.shape[1] != 1:
-        print("Error in minmax: bad shape")
-        return None
-    ret = np.array(x - np.min(x)) / (np.max(x) - np.min(x))
-    return (ret)
 
 def zscore(x):
     """Computes the normalized version of a non-empty numpy.ndarray using the z-score standardization.
@@ -37,29 +51,17 @@ def zscore(x):
     Raises:
         This function shouldn’t raise any Exception.
     """
-    if not isinstance(x, np.ndarray):
-        return None
-    if len(x.shape) == 0 or len(x.shape) > 2:
-        return None
-    if len(x.shape) == 2 and x.shape[1] != 1:
-        return None
+    # if not isinstance(x, np.ndarray):
+    #     return None
+    # if len(x.shape) == 0 or len(x.shape) > 2:
+    #     return None
+    # if len(x.shape) == 2 and x.shape[1] != 1:
+    #     return None
     try:
-        return minmax((x - np.mean(x)) / np.std(x))
-    except Exception:
+        return ((x - np.mean(x)) / np.std(x))
+    except Exception as e:
+        print(e)
         return None
-
-path = os.path.join(os.path.dirname(__file__), '..', 'ex09')
-sys.path.insert(1, path)
-from data_spliter import data_spliter
-
-path = os.path.join(os.path.dirname(__file__), '..', 'ex07')
-sys.path.insert(1, path)
-
-from polynomial_model import add_polynomial_features
-
-path = os.path.join(os.path.dirname(__file__), '..', 'ex05')
-sys.path.insert(1, path)
-from mylinearregression import MyLinearRegression as MyLR
 
 if __name__ == "__main__":
     # Importation of the dataset + basic checking:
@@ -85,33 +87,84 @@ if __name__ == "__main__":
     # plt.show()
     
     # 3D
-    fig = plt.figure(figsize=(12, 20))
-    ax = fig.add_subplot(111, projection='3d')
-    ax.set_title('Analyzer')
-    ax.set_xlabel('weight')
-    ax.set_ylabel('distance')
-    ax.set_zlabel('time')
-    min_target = target.min()
-    max_target = target.max()
-    taille = target - min_target
-    taille = taille / (max_target - min_target) * 100
-    p = ax.scatter(weight, prod_distance, time_delivery, s=taille, c=target, cmap='viridis', vmin = min_target, vmax = max_target)
-    cbar = plt.colorbar(p)
-    cbar.set_label("price of the order (in trantorian unit)", labelpad=+1)
+    # fig = plt.figure()
+    # ax = fig.add_subplot(projection='3d')
+    # ax.set_title('Analyzer')
+    # ax.set_xlabel('weight')
+    # ax.set_ylabel('distance')
+    # ax.set_zlabel('time')
+    # min_target = target.min()
+    # max_target = target.max()
+    # taille = target - min_target
+    # taille = taille / (max_target - min_target) * 100
+    # p = ax.scatter(weight, prod_distance, time_delivery, s=taille, c=target, alpha = 0.9, cmap='viridis', vmin = min_target, vmax = max_target)
+    # cbar = plt.colorbar(p)
+    # cbar.set_label("price of the order (in trantorian unit)", labelpad=+1)
 
 
-    plt.show()
+    # plt.show()
     
     # split dataset
     x_train, x_test, y_train, y_test = data_spliter(Xs, target.reshape(-1,1), 0.8)
+
+    #normalisation
+    x = minmax(x_train)
+    x_test = minmax(x_test)
+    y = y_train
+    # y = minmax(y_train)
+    #y_test = minmax(y_test)
     
+    #model
+    hypo = [3, 4, 1] # hypothese des polymome pour chq features
+    model = [1 for _ in range(sum(hypo) + 1)]
+    theta = np.array(model).reshape(-1, 1)
+
+    x_ = add_polynomial_features(x, hypo)
+    x_test_ = add_polynomial_features(x_test, hypo)
+
+    alpha = 0.1
+    rate = 2000
+    mylr = MyLR(theta, alpha, rate, progress_bar=True)
+    mse_list = mylr.fit_(x_, y)
+    print(f"MSE = {MyLR.mse_(y_test, mylr.predict_(x_test_))}")
+    print(f"RMSE = {MyLR.rmse_(y_test, mylr.predict_(x_test_))}")
+    y_hat = mylr.predict_(x_test_)
+    plt.figure()
+    plt.scatter(x_test[:, 0], y_test, c="b", marker='o', label="price")
+    plt.scatter(x_test[:, 0], y_hat, c='r', marker='x', label="predicted price")
+    plt.figure()
+    plt.scatter(x_test[:, 1], y_test, c="b", marker='o', label="price")
+    plt.scatter(x_test[:, 1], y_hat, c='r', marker='x', label="predicted price")
+    plt.figure()
+    plt.scatter(x_test[:, 2], y_test, c="b", marker='o', label="price")
+    plt.scatter(x_test[:, 2], y_hat, c='r', marker='x', label="predicted price")
+
+    fig = plt.figure()
+    ax = fig.add_subplot()
+    ax.plot(np.arange(rate), np.sqrt(mse_list))
+    ax.set_xlabel("number iteration")
+    ax.set_ylabel("mse")
+    plt.show()
+    quit()
+    # x_train_poly = add_polynomial_features(x_train, 4)
+    # print(x_train_poly.shape)
+    # theta = np.random.rand(5, 1)
+    # mylr = MyLR(thetas=theta, alpha=1e-2, max_iter=1000000, progress_bar=True)
+    
+    # print(MyLR.gradien_(x_train_poly, y_train, theta))
+    # mylr.fit_(x_train_poly, y_train)
+    # print(mylr.thetas)
+    # prediction = mylr.predict_(x_train_poly)
+    # print(f"MSE = {MyLR.mse_(y_test, prediction)}")
+
+    # quit()
     # weight
     weight_train = x_train.T[0]
     weight_test = x_test.T[0]
     
     # normalisation
-    y_train = zscore(y_train)
-    y_test = zscore(y_test)
+    # y_train = zscore(y_train)
+    # y_test = zscore(y_test)
     weight_train_norm = zscore(weight_train)
     weight_test_norm = zscore(weight_test)
    

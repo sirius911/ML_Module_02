@@ -1,3 +1,5 @@
+import math
+import warnings
 import numpy as np
 
 from ft_progress import ft_progress
@@ -38,12 +40,23 @@ class MyLinearRegression():
             y_hat as a numpy.array, a vector of dimension m * 1.
         """
         # try:
-        x_1 = np.c_[np.ones(x.shape[0]), x]
-        if x.shape[1] == self.thetas.shape[0]: # (_,n) (n, _)
-            return x.dot(self.thetas)
-        return x_1.dot(self.thetas)
+        # x_1 = np.c_[np.ones(x.shape[0]), x]
+        # if x.shape[1] == self.thetas.shape[0]: # (_,n) (n, _)
+        #     return x.dot(self.thetas)
+        # return x_1.dot(self.thetas)
         # except Exception:
         #     return None
+        if (not isinstance(x, np.ndarray) or not isinstance(self.thetas, np.ndarray)):
+            print("Error in predict_: not numpy.array")
+            return None
+        if (x.size == 0 or self.thetas.size == 0):
+            print("Error in predict_: empty array.")
+            return None
+        if (len(self.thetas) != x.shape[1] + 1):
+            print("Error in predict_: invalid shape.")
+            return None
+        x = np.concatenate([np.ones(len(x)).reshape(-1, 1), x], axis=1)
+        return x.dot(self.thetas)
 
     def loss_elem_(self, y, y_hat):
         """
@@ -101,6 +114,7 @@ class MyLinearRegression():
         Returns:
             None
         """
+        # warnings.filterwarnings("error")
         if not isinstance(x,np.ndarray) or not isinstance(y, np.ndarray):
             print("Error: x or y are not good Numpy.ndarray.")
             return 
@@ -108,32 +122,33 @@ class MyLinearRegression():
             print("Error: x or y are empty.")
             return 
         try:
-            list = range(self.max_iter)
-            if self.progress_bar:
-                list = ft_progress(list)
-            
-            for i in list:
-                m = len(x)
-                # h = self.predict_(x)
-                # diff = h - y
-                gradien = MyLinearRegression.gradien_(x, y, self.thetas)
-                for n, g_n in enumerate(gradien):
-                    tn = self.thetas[n][0]
-                    tn -= (self.alpha * gradien[n][0])
-                    self.thetas[n][0]= tn
-        except Exception:
-            raise MyLinearRegressionException("Error occured in fit()")
+            with warnings.catch_warnings():
+                list = range(self.max_iter)
+                if self.progress_bar:
+                    list = ft_progress(list)
+                list_mse = []
+                for i in list:
+                    # m = len(x)
+                    # h = self.predict_(x)
+                    # diff = h - y
+                    gradien = self.gradien_(x, y)
+                    self.thetas = self.thetas - (self.alpha * gradien)
+                    mse = int(MyLinearRegression.mse_(y, self.predict_(x)))
+                    list_mse.append(mse)
+                    # for n, g_n in enumerate(gradien):
+                    #     tn = self.thetas[n][0]
+                    #     tn -= (self.alpha * gradien[n][0])
+                    #     self.thetas[n][0]= tn
+                return list_mse
+        except Exception as e:
+            raise MyLinearRegressionException(e)
     
-    #****************************************************************
-    # Class' Methods
-    #****************************************************************
-    def gradien_(x, y, thetas):
+    def gradien_(self, x, y):
         """Computes a gradient vector from three non-empty numpy.array, without any for-loop.
             The three arrays must have the compatible dimensions.
         Args:
             x: has to be an numpy.array, a matrix of dimension m * n.
             y: has to be an numpy.array, a vector of dimension m * 1.
-            theta: has to be an numpy.array, a vector (n +1) * 1.
         Return:
             The gradient as a numpy.array, a vector of dimensions n * 1,
                 containg the result of the formula for all j.
@@ -143,25 +158,43 @@ class MyLinearRegression():
         Raises:
             This function should not raise any Exception.
         """
-        try:
-            # Testing the type of the parameters, numpy array expected.
-            if (not isinstance(x, np.ndarray)) or (not isinstance(y, np.ndarray)) \
-                or (not isinstance(thetas, np.ndarray)):
-                return None
-
-            # Testing the shape of the paramters.
-            if (y.shape[1] != 1) \
-                or (thetas.shape[1] != 1) \
-                    or (x.shape[0] != y.shape[0]) \
-                    or ((x.shape[1] + 1) != thetas.shape[0]):
-                return None
-
-            m = x.shape[0]
-            x_ = np.hstack((np.ones((m, 1)), x))
-            grad = x_.T @ (x_ @ thetas - y)
-            return grad / m
-        except:
+        if (not isinstance(y, np.ndarray) or not isinstance(x, np.ndarray) or not isinstance(self.thetas, np.ndarray)):
+            print("Error in gradien_: not numpy.array")
             return None
+        if (len(y) != len(x) or self.thetas.shape[0] != x.shape[1] + 1):
+            print(f"Error in gradien_: len(y):{len(y)} != len(x):{len(x)} or thetas.shape[0]:{self.thetas.shape[0]} != x.shape[1]+1 :{x.shape[1]+1}")
+            return None
+        try:
+            fct = 1 / len(x)
+            x_hat = self.predict_(x)
+            x = np.concatenate([np.ones(len(x)).reshape(-1, 1), x], axis=1).T
+            return np.array(fct * (x.dot((x_hat - y))))
+        except Exception as e:
+            print(e)
+            return None
+        # if not isinstance(x,np.ndarray) or not isinstance(y, np.ndarray) or not isinstance(thetas, np.ndarray):
+        #     print("Error in gradien_(): not numpy.array")
+        #     return None
+        # try:
+        #     m = x.shape[0]
+        #     n = x.shape[1]
+            
+        #     # if (y.shape[1] != 1) or (thetas.shape[1] != 1) \
+        #     # or (m != y.shape[0]):
+        #     #     return None
+        #     x_1 = np.hstack((np.ones((m, 1)), x))
+        #     x_t = x_1.T
+        #     h = x @ thetas
+        #     diff = h - y
+        #     grad = x_t @ diff
+        #     return grad / m
+        # except Exception as e:
+        #     print(e)
+        #     return None
+
+    #****************************************************************
+    # Class' Methods
+    #****************************************************************
 
     def mse_(y, y_hat):
         """
@@ -179,5 +212,23 @@ class MyLinearRegression():
         try:
             loss_elem = (y_hat - y) * (y_hat - y)
             return loss_elem.sum() / len(y)
+        except Exception:
+            return None
+
+    def rmse_(y, y_hat):
+        """
+        Description:
+            Calculate the MSE between the predicted output and the real output.
+        Args:
+            y: has to be a numpy.array, a vector of dimension m * 1.
+            y_hat: has to be a numpy.array, a vector of dimension m * 1.
+        Returns:
+            mse: has to be a float.
+            None if there is a matching dimension problem.
+        Raises:
+            This function should not raise any Exceptions.
+        """
+        try:
+            return math.sqrt(MyLinearRegression.mse_(y, y_hat))
         except Exception:
             return None
