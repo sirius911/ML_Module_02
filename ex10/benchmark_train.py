@@ -1,12 +1,10 @@
 from cmath import inf, nan
-import itertools
 import os
 import sys
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import yaml
-from ft_progress import ft_progress
+from ft_yaml import init_model_yaml, load_model, save_model
 
 path = os.path.join(os.path.dirname(__file__), '..', 'ex09')
 sys.path.insert(1, path)
@@ -35,62 +33,6 @@ class Normalizer():
         X_tr /= self.std_
         return X_tr
 
-# def minmax(x):
-#     """Computes the normalized version of a non-empty numpy.ndarray using the min-max standardization.
-#     Args:
-#         x: has to be an numpy.ndarray, a vector.
-#     Returns:
-#         x’ as a numpy.ndarray.
-#         None if x is a non-empty numpy.ndarray or not a numpy.ndarray.
-#     Raises:
-#         This function shouldn’t raise any Exception.
-#     """
-    
-#     try:
-#         result = []
-#         for row in x.T:
-#             min_r = min(row)
-#             max_r = max(row)
-#             result.append([(el - min_r) / (max_r - min_r) for el in row])
-#         return np.array(result).T
-#     except Exception as e:
-#         print(e)
-#         return None
-
-def init_model_yaml(file = 'models.yaml'):
-    """
-    init the file models.yaml
-    with structure of all the models
-    ['name'] 
-    ['alpha']
-    ['iter']
-    ['mse']
-    ['evol_mse']
-    ['polynomes']
-    """
-    try:
-        pow = range(1, 4 + 1)   # puissances max du polynome = 4
-        combi_polynomes = np.array(list(itertools.product(list(itertools.product(pow)), repeat=3)))
-        list_models = []
-        print('***init model_yaml ***')
-        for _,hypo in zip(ft_progress(range(len(combi_polynomes))), combi_polynomes):
-            models = {}
-            models['name'] = f"w{hypo[0][0]}d{hypo[1][0]}t{hypo[2][0]}"
-            models['alpha'] = 0.1
-            models['iter'] = 200
-            polynome = list([int(po[0]) for po in hypo])
-            models['polynomes'] =polynome
-            models['thetas'] = [1 for _ in range(sum(polynome) + 1)]
-            models['mse'] = None
-            models['evol_mse'] = []
-            list_models.append(models)
-        with open(file, 'w') as outfile:
-                yaml.dump_all(list_models, outfile, sort_keys=False, default_flow_style=None)
-        return True
-    except Exception as e:
-        print(e)
-        return False
-
 def graph_3D(data):
     """
     show the graphics of data in 3D
@@ -115,37 +57,10 @@ def graph_3D(data):
     cbar.set_label("price of the order (in trantorian unit)", labelpad=+1)
     plt.show()
 
-def load_model(file = 'models.yaml'):
-    """
-        loqd the file and return a the list of Model in this file or None
-    """
-    return_list =[]
-    try:
-        with open(file, 'r') as infile:
-            list_models = yaml.safe_load_all(infile)
-            return_list = list(list_models)
-        return return_list
-    except Exception as e:
-        print(e)
-        return None
-
-def save_model(outfile = 'models.yaml', list_models = None):
-    """
-        save in yaml the list models in file
-        return True if ok False otherwise
-    """
-    try:
-        with open('models.yaml', 'w') as outfile:
-            yaml.dump_all(list_models, outfile, sort_keys=False, default_flow_style=None)
-            return True
-    except Exception as e:
-        print(e)
-        return False
-
 def main():
-    # Importation of the dataset
     print("Loading models ...")
     try:
+        # Importation of the dataset
         data = pd.read_csv("space_avocado.csv", dtype=np.float64)
         #init models.yaml
         try:
@@ -160,8 +75,7 @@ def main():
     Xs = data[['weight','prod_distance','time_delivery']].values # features
     
     # 3D
-    
-    # graph_3D(data)
+    graph_3D(data)
  
     # split dataset
     x_train, x_test, y_train, y_test = data_spliter(Xs, target.reshape(-1,1), 0.8)
@@ -225,6 +139,7 @@ def main():
                 best_model = model
     print(" ended")
     print(f"Best Model -> {yellow}{best_model['name']}{reset} with MSE = {green}{best_model['mse']}{reset}")
+    
     #graph mse
     fig = plt.figure()
     ax = fig.add_subplot()
@@ -235,40 +150,8 @@ def main():
     ax.grid()
     plt.axis([0, 200, 0, 2])
     plt.show()
-    quit()
-    #model
-    hypo = [3, 4, 2] # hypothese des polymome pour chq features
-    model = [1 for _ in range(sum(hypo) + 1)]
-    theta = np.array(model).reshape(-1, 1)
-
-    x_ = add_polynomial_features(x, hypo)
-    x_test_ = add_polynomial_features(x_test, hypo)
-
-    alpha = 0.1
-    rate = 200
-    mylr = MyLR(theta, alpha, rate, progress_bar=True)
-    mse_list = mylr.fit_(x_, y)
-    print(f"MSE = {MyLR.mse_(y_test, mylr.predict_(x_test_))}")
-    print(f"RMSE = {MyLR.rmse_(y_test, mylr.predict_(x_test_))}")
-    y_hat = mylr.predict_(x_test_)
-    plt.figure()
-    plt.scatter(x_test[:, 0], y_test, c="b", marker='o', label="price")
-    plt.scatter(x_test[:, 0], y_hat, c='r', marker='x', label="predicted price")
-    plt.figure()
-    plt.scatter(x_test[:, 1], y_test, c="b", marker='o', label="price")
-    plt.scatter(x_test[:, 1], y_hat, c='r', marker='x', label="predicted price")
-    plt.figure()
-    plt.scatter(x_test[:, 2], y_test, c="b", marker='o', label="price")
-    plt.scatter(x_test[:, 2], y_hat, c='r', marker='x', label="predicted price")
-
-    fig = plt.figure()
-    ax = fig.add_subplot()
-    ax.plot(np.arange(rate), (np.sqrt(mse_list)))
-    ax.set_xlabel("number iteration")
-    ax.set_ylabel("mse")
-    ax.grid()
-    plt.show()
 
 if __name__ == "__main__":
     print("Benchmar starting ...")
     main()
+    print("Good by !")
