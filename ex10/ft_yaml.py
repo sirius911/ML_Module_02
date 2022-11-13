@@ -1,4 +1,5 @@
 import yaml
+import numpy as np
 from ft_progress import ft_progress
 import itertools
 
@@ -23,7 +24,7 @@ def init_model_yaml(file = 'models.yaml'):
             models = {}
             models['name'] = f"w{hypo[0][0]}d{hypo[1][0]}t{hypo[2][0]}"
             models['alpha'] = 0.1
-            models['iter'] = 200
+            models['iter'] = 1000
             polynome = list([int(po[0]) for po in hypo])
             models['polynomes'] =polynome
             models['thetas'] = [1 for _ in range(sum(polynome) + 1)]

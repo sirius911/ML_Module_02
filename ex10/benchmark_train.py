@@ -60,7 +60,7 @@ def graph_3D(data):
 def main():
     print("Loading models ...")
     try:
-        # Importation of the dataset
+    # Importation of the dataset
         data = pd.read_csv("space_avocado.csv", dtype=np.float64)
         #init models.yaml
         try:
