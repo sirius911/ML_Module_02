@@ -44,13 +44,12 @@ def plot(X,Y,Y_hat, Xlabel, title):
     plt.grid(True)
     plt.show()
 
-# print("****** First Part ******")
+print("****** First Part ******")
 print(" with age")
 Xage = np.array(data['Age']).reshape(-1,1)
 Ysell = np.array(data['Sell_price']).reshape(-1,1)
 
-# myLR_age = MyLR([[0.0],[0.0]], alpha=0.001, max_iter=150000, progress_bar=True)
-myLR_age = MyLR([[0.0],[0.0]], alpha=5e-3, max_iter=50000, progress_bar=True)
+myLR_age = MyLR([[0.0],[0.0]], alpha=0.01, max_iter=5000, progress_bar=True)
 
 myLR_age.fit_(Xage, Ysell)
 # myLR_age.thetas = np.array([[647.09274075], [-12.99506324]])
@@ -64,7 +63,7 @@ plot(Xage, Ysell, y_hat_age, "$x_1: Age~(in~years)$",title)
 
 print(" With Thrust")
 Xthrust = np.array(data['Thrust_power']).reshape(-1,1)
-myLR_thrust = MyLR([[0.0],[0.0]], alpha=1e-4, max_iter=50000, progress_bar=True)
+myLR_thrust = MyLR([[0.0],[0.0]], alpha=1e-4, max_iter=1000, progress_bar=True)
 
 myLR_thrust.fit_(Xthrust, Ysell)
 # myLR_thrust.thetas = np.array([[39.27654867],[ 4.33215864]])
@@ -97,7 +96,6 @@ theta=np.array( [1.0, 1.0, 1.0, 1.0]).reshape(-1,1)
 my_lreg = MyLR(thetas = theta, alpha = 5e-5, max_iter = 75000, progress_bar=True)
 y_hat = my_lreg.predict_(X)
 print(MyLR.mse_(Y,y_hat))
-print(MyLR.gradien_(X,Y,theta))
 
 my_lreg.fit_(X,Y)
 

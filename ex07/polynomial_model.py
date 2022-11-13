@@ -15,18 +15,18 @@ def add_polynomial_features(x, power):
         This function should not raise any Exception.
     """
     try:
-        # if not isinstance(x, np.ndarray) or not isinstance(power, int):
-        #     print("Error in add_polynomial_features: not numpy array")
-        #     return None
-        # if not x.ndim in [1, 2]:
-        #     print("Error in add_polynomial_features: x.ndim not in [1, 2]")
-        #     return None
-        # if power <0:
-        #     print("Error in add_polynomial_features: powe < 0")
-        #     return None
-        # if x.ndim == 2 and x.shape[1] != 1:
-        #     print("Error in add_polynomial_features: x.shape != 1")
-        #     return None
+        if not isinstance(x, np.ndarray) or not isinstance(power, int):
+            print("Error in add_polynomial_features: not numpy array")
+            return None
+        if not x.ndim in [1, 2]:
+            print("Error in add_polynomial_features: x.ndim not in [1, 2]")
+            return None
+        if power <0:
+            print("Error in add_polynomial_features: powe < 0")
+            return None
+        if x.ndim == 2 and x.shape[1] != 1:
+            print("Error in add_polynomial_features: x.shape != 1")
+            return None
         if power == 0:
             return np.ones((x.shape[0], 1))
         if power == 1:
